@@ -132,7 +132,7 @@ def delUserNS(email, s):
         return updateSO(s, 'delUserNS', 'error', e)
 
 
-def createUserRoles(email, first_name, last_name, s, createdNS=None, exists=False, admin=False):
+def createUserRoles(email, first_name, last_name, s, createdNS=None, exists=False, admin=False, idm_type = 'SSO'):
     url = s['urlBase'] + "/api/web/custom/namespaces/system/user_roles"
     if admin:
         namespace_roles = [
@@ -154,7 +154,7 @@ def createUserRoles(email, first_name, last_name, s, createdNS=None, exists=Fals
         'first_name': first_name,
         'last_name': last_name,
         'name': email.lower(),
-        'idm_type': 'SSO',
+        'idm_type': idm_type,
         'namespace': 'system',
         'namespace_roles': namespace_roles,
         'type': 'USER'
