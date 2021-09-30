@@ -39,7 +39,15 @@ def update():
     print(session['lastOp'])
 
     if options.action == 'create':
-        result = createUserRoles(username, fname, lname, session, namespace, False, False, idm_type = 'VOLTERRA_MANAGED')    
+        namespace_roles = [
+            {'namespace': 'system', 'role': 'ves-io-power-developer-role'},
+            {'namespace': 'system', 'role': 'f5-demo-infra-write'},
+            {'namespace': 'demo-app', 'role': 'ves-io-monitor-role'},
+            {'namespace': 'default', 'role': 'ves-io-power-developer-role'},
+            {'namespace': 'shared', 'role': 'ves-io-power-developer-role'}
+        ]
+
+        result = createUserRoles(username, fname, lname, session, namespace, False, False, idm_type = 'VOLTERRA_MANAGED', namespace_roles = namespace_roles)    
     elif options.action == 'delete':
         result = delUser(username, session)
     #print(result)
