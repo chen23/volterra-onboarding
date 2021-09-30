@@ -132,9 +132,11 @@ def delUserNS(email, s):
         return updateSO(s, 'delUserNS', 'error', e)
 
 
-def createUserRoles(email, first_name, last_name, s, createdNS=None, exists=False, admin=False, idm_type = 'SSO'):
+def createUserRoles(email, first_name, last_name, s, createdNS=None, exists=False, admin=False, idm_type = 'SSO', namespace_roles = None):    
     url = s['urlBase'] + "/api/web/custom/namespaces/system/user_roles"
-    if admin:
+    if namespace_roles:
+        pass  
+    elif admin:
         namespace_roles = [
             {'namespace': 'system', 'role': 'ves-io-admin-role'},
             {'namespace': '*', 'role': 'ves-io-admin-role'},
@@ -284,3 +286,46 @@ def getWingmanSecret(blindfoldText):
         return r.text
     else:
         return None
+
+def getHttpLoadBalancers(s, namespace):
+    httplbs = []
+    urlHttpLbs = s['urlBase'] + "/api/config/namespaces/%s/http_loadbalancers" %(namespace)
+    try:
+        resp = s['session'].get(urlHttpLbs)
+        resp.raise_for_status()
+        httplbs = json.loads(resp.text)['items']
+        updateSO(s, 'getHttpLoadBalancers', 'success', 'all good')
+    except requests.exceptions.RequestException as e:
+        updateSO(s, 'getHttpLoadBalancers', 'error', e)
+    except json.decoder.JSONDecodeError as e:
+        updateSO(s, 'getHttpLoadBalancers', 'error', e)
+    return httplbs
+
+def getTcpLoadBalancers(s, namespace):
+    tcplbs = []
+    urlHttpLbs = s['urlBase'] + "/api/config/namespaces/%s/tcp_loadbalancers" %(namespace)
+    try:
+        resp = s['session'].get(urlHttpLbs)
+        resp.raise_for_status()
+        tcplbs = json.loads(resp.text)['items']
+        updateSO(s, 'getTcpLoadBalancers', 'success', 'all good')
+    except requests.exceptions.RequestException as e:
+        updateSO(s, 'getTcpLoadBalancers', 'error', e)
+    except json.decoder.JSONDecodeError as e:
+        updateSO(s, 'getTcpLoadBalancers', 'error', e)
+    return tcplbs
+
+def getItems(s, url):
+    items = []
+    requestUrl = s['urlBase'] + url
+    try:
+        resp = s['session'].get(requestUrl)
+        resp.raise_for_status()
+        items = json.loads(resp.text)['items']
+        updateSO(s, 'getItems', 'success', 'got some items')
+    except requests.exceptions.RequestException as e:
+        updateSO(s, 'getItems', 'error', e)
+    except json.decoder.JSONDecodeError as e:
+        updateSO(s, 'getItems', 'error', e)
+    return items
+
