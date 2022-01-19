@@ -4,6 +4,7 @@ from optparse import OptionParser
 from os import environ
 import sys
 import csv
+import time
 parser = OptionParser()
 
 parser.add_option("--tenant")
@@ -33,18 +34,21 @@ def update():
     elif options.action == 'delete':
         result = delUserNS(namespace, session)
 
-    if session['lastOp']['status'] == 'error':
-        raise Exception(session['lastOp']['message'])
-
+    if session['lastOp']['status'] == 'error' and options.action == 'create':
+        print(session['lastOp']['message'])
+#        raise Exception(session['lastOp']['message'])
+    else:
+        print(session['lastOp']['message'])
     print(session['lastOp'])
-
+#            {'namespace': 'demo-app', 'role': 'ves-io-monitor-role'},
+#            {'namespace': '*', 'role': 'ves-io-monitor-role'},
+#             {'namespace': 'demo-app', 'role': 'ves-io-monitor-role'},            
     if options.action == 'create':
         namespace_roles = [
-            {'namespace': 'system', 'role': 'ves-io-power-developer-role'},
-            {'namespace': 'system', 'role': 'f5-demo-infra-write'},
-            {'namespace': 'demo-app', 'role': 'ves-io-monitor-role'},
-            {'namespace': 'default', 'role': 'ves-io-power-developer-role'},
-            {'namespace': 'shared', 'role': 'ves-io-power-developer-role'}
+            {'namespace': 'system','role':'chen-lab-users'},
+#            {'namespace': 'system', 'role': 'ves-io-power-developer-role'},
+#            {'namespace': 'system', 'role': 'f5-demo-infra-write'},
+#            {'namespace': 'shared', 'role': 'ves-io-power-developer-role'}
         ]
 
         result = createUserRoles(username, fname, lname, session, namespace, False, False, idm_type = 'VOLTERRA_MANAGED', namespace_roles = namespace_roles)    
@@ -59,11 +63,17 @@ def update():
 if options.filename:
     # CSV file
     for row in csv.reader(open(options.filename)):
+        if len(row) == 0:
+            continue
         (username, fname, lname, namespace) = row
+        if username[0] == '#':
+            continue
         try:
             update()
         except:
+            print(session['lastOp']['message'])            
             print("error with",row)
+        time.sleep(3)            
 else:
     update()    
 #result = delUserNS(namespace, session)
