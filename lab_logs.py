@@ -135,12 +135,25 @@ payload = """{
   "end_time": "2022-01-21T00:00:00.000Z"
 }"""
 
+# (datetime.datetime.now()-datetime.timedelta(days=1)).isoformat('T')[:-3]
+
+utc_dt = datetime.datetime.utcnow()
+payload = """{
+  "query": "{namespace!=\\"system\\"}",
+  "namespace": "system",
+  "sort": "DESCENDING",
+  "limit": 500,
+  "scroll": true,
+  "aggs": {},
+  "start_time": "%sZ",
+  "end_time": "%sZ"
+}""" %((utc_dt-datetime.timedelta(days=1)).isoformat('T')[:-3],(utc_dt).isoformat('T')[:-3])
 
 #payload = "{}"
 print(payload)
 resp = getLogs(session,"/api/data/namespaces/system/audit_logs",payload)
 #print(session['lastOp']['message'])
-print(len(resp))
+print(len(resp),"log entries found")
 x = 0
 output = []
 for entry in resp:
