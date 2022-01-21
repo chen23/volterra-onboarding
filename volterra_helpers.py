@@ -329,3 +329,26 @@ def getItems(s, url):
         updateSO(s, 'getItems', 'error', e)
     return items
 
+def getLogs(s, url, payload, scroll_id = ""):
+    logs = []
+    requestUrl = s['urlBase'] + url + scroll_id
+    try:
+        resp = s['session'].post(requestUrl,data=payload)
+        resp.raise_for_status()
+        raw_logs = json.loads(resp.text)['logs']        
+        scroll_id = json.loads(resp.text)['scroll_id']            
+        if scroll_id:
+            while scroll_id:
+                resp = s['session'].get(requestUrl + "/scroll?scroll_id=%s" %(scroll_id))
+                raw_logs = raw_logs + json.loads(resp.text)['logs']        
+                scroll_id = json.loads(resp.text)['scroll_id']            
+
+        logs = logs + [json.loads(j) for j in raw_logs]
+        
+        updateSO(s, 'getLogs', 'success', 'got some items')
+    except requests.exceptions.RequestException as e:
+        updateSO(s, 'getLogs', 'error', e)
+    except json.decoder.JSONDecodeError as e:
+        updateSO(s, 'getLogs', 'error', e)
+    return logs
+    

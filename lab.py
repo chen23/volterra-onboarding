@@ -1,4 +1,4 @@
-from volterra_helpers import createVoltSession, createUserRoles, delUserNS, delUser, createUserNS
+from volterra_helpers import createVoltSession, createUserRoles, delUserNS, delUser, createUserNS, createCache
 
 from optparse import OptionParser
 from os import environ
@@ -39,7 +39,7 @@ def update():
 #        raise Exception(session['lastOp']['message'])
     else:
         print(session['lastOp']['message'])
-    print(session['lastOp'])
+    #print(session['lastOp'])
 #            {'namespace': 'demo-app', 'role': 'ves-io-monitor-role'},
 #            {'namespace': '*', 'role': 'ves-io-monitor-role'},
 #             {'namespace': 'demo-app', 'role': 'ves-io-monitor-role'},            
@@ -61,11 +61,18 @@ def update():
     print(session['lastOp'])
 
 if options.filename:
+    createCache(session)
+    existing_namespaces = [a['name'] for a in session['cache']['namespaces']]
+    existing_users = [a['name'] for a in session['cache']['users']]
     # CSV file
     for row in csv.reader(open(options.filename)):
         if len(row) == 0:
             continue
         (username, fname, lname, namespace) = row
+        if username not in existing_users and namespace not in existing_namespaces:
+            if options.action == "delete":
+                print("skipping",username,namespace)
+                continue
         if username[0] == '#':
             continue
         try:
