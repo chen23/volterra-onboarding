@@ -32,7 +32,8 @@ def update():
     if options.action == 'create':
         result = createUserNS(namespace, session)
     elif options.action == 'delete':
-        result = delUserNS(namespace, session)
+        if namespace:
+            result = delUserNS(namespace, session)
 
     if session['lastOp']['status'] == 'error' and options.action == 'create':
         print(session['lastOp']['message'])
@@ -59,20 +60,51 @@ def update():
         print(session['lastOp']['message'])
         raise Exception(session['lastOp']['message'])        
     print(session['lastOp'])
-
+import re
+get_num = re.compile("student(\d+)").search
 if options.filename:
     createCache(session)
     existing_namespaces = [a['name'] for a in session['cache']['namespaces']]
-    existing_users = [a['name'] for a in session['cache']['users']]
+    existing_users = dict([(a['name'],a['namespace_roles']) for a in session['cache']['users']])
     # CSV file
+#    print(existing_users)
+    existing_namespaces.sort()
+    existing_students = [a for a in existing_namespaces if a.startswith("student")]    
+#    print(existing_namespaces)
+#    print(existing_students)
+    last_student = existing_students[-1]
+    m = get_num(last_student)
+    if m:
+        last_student_num = int(m.groups()[0])
+    else:
+        last_student_num = 100
+
     for row in csv.reader(open(options.filename)):
         if len(row) == 0:
             continue
-        (username, fname, lname, namespace) = row
-        if username not in existing_users and namespace not in existing_namespaces:
+        if len(row) == 3:
+            (username, fname, lname) = row
+            last_student_num += 1
+            namespace = "student%03d" %(last_student_num)
+        else:
+            (username, fname, lname, namespace) = row
+#        if username not in existing_users and namespace not in existing_namespaces:
+        if username not in existing_users:
             if options.action == "delete":
                 print("skipping",username,namespace)
+                print("test delete")                
                 continue
+        if username in existing_users:
+            namespace_roles = existing_users[username]
+            namespaces = list(set([n['namespace'] for n in namespace_roles if n['namespace'] not in ['system','shared',"*","default","demo-app"]]))
+            if namespaces:
+                namespace = namespaces[0]
+            else:
+                namespace = None
+            if options.action == "create":
+                print("skipping",username)
+        print(username,namespace)
+#        continue
         if username[0] == '#':
             continue
         try:
